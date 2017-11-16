@@ -83,6 +83,11 @@
         CGFloat height = [[v objectForKey:@"height"] floatValue];
         return [NSValue valueWithCGRect:CGRectMake(x, y, width, height)];
     }
+    if ([type isEqualToString:@"CFTimeInterval"])
+    {
+        if (![value isKindOfClass:[NSNumber class]]) return nil;
+        return value;
+    }
     if ([type isEqualToString:@"Invocation"])
     {
         if (![value isKindOfClass:[NSDictionary class]]) return nil;
