@@ -58,9 +58,9 @@ class TapAtPointAction extends Action {
 }
 
 class LongPressAction extends Action {
-  constructor() {
+  constructor(duration = 750) {
     super();
-    this._call = invoke.callDirectly(GreyActions.actionForLongPress());
+    this._call = invoke.callDirectly(GreyActions.actionForLongPressWithDuration(duration / 1000));
   }
 }
 
@@ -110,46 +110,44 @@ class ScrollEdgeAction extends Action {
 class SwipeAction extends Action {
   constructor(direction, speed, percentage) {
     super();
-    if (typeof direction !== 'string') throw new Error(`SwipeAction ctor 1st argument must be a string, got ${typeof direction}`);
-    if (typeof speed !== 'string') throw new Error(`SwipeAction ctor 2nd argument must be a string, got ${typeof speed}`);
+    if (typeof direction !== 'string') {
+      throw new Error(`SwipeAction ctor 1st argument must be a string, got ${typeof direction}`);
+    }
+    if (typeof speed !== 'string') {
+      throw new Error(`SwipeAction ctor 2nd argument must be a string, got ${typeof speed}`);
+    }
 
     if (percentage) {
       let x, y;
       const eps = 10 ** -8;
       switch (direction) {
-        case "left":
-          x = percentage, y = eps;
+        case 'left':
+          (x = percentage), (y = eps);
           break;
-        case "right":
-          x = percentage, y = eps;
+        case 'right':
+          (x = percentage), (y = eps);
           break;
-        case "up":
-          y = percentage, x = eps;
+        case 'up':
+          (y = percentage), (x = eps);
           break;
-        case "down":
-          y = percentage, x = eps;
+        case 'down':
+          (y = percentage), (x = eps);
           break;
       }
 
       if (speed == 'fast') {
-        this._call = invoke.callDirectly(
-          GreyActions.actionForSwipeFastInDirectionXOriginStartPercentageYOriginStartPercentage(direction, x, y)
-        );
+        this._call = invoke.callDirectly(GreyActions.actionForSwipeFastInDirectionXOriginStartPercentageYOriginStartPercentage(direction, x, y));
       } else if (speed == 'slow') {
-        this._call = invoke.callDirectly(
-          GreyActions.actionForSwipeSlowInDirectionXOriginStartPercentageYOriginStartPercentage(direction, x, y)
-        );
+        this._call = invoke.callDirectly(GreyActions.actionForSwipeSlowInDirectionXOriginStartPercentageYOriginStartPercentage(direction, x, y));
       } else {
         throw new Error(`SwipeAction speed must be a 'fast'/'slow', got ${speed}`);
       }
+    } else if (speed == 'fast') {
+      this._call = invoke.callDirectly(GreyActions.actionForSwipeFastInDirection(direction));
+    } else if (speed == 'slow') {
+      this._call = invoke.callDirectly(GreyActions.actionForSwipeSlowInDirection(direction));
     } else {
-      if (speed == 'fast') {
-        this._call = invoke.callDirectly(GreyActions.actionForSwipeFastInDirection(direction));
-      } else if (speed == 'slow') {
-        this._call = invoke.callDirectly(GreyActions.actionForSwipeSlowInDirection(direction));
-      } else {
-        throw new Error(`SwipeAction speed must be a 'fast'/'slow', got ${speed}`);
-      }
+      throw new Error(`SwipeAction speed must be a 'fast'/'slow', got ${speed}`);
     }
   }
 }
@@ -196,13 +194,17 @@ class WaitForInteraction extends Interaction {
     return this;
   }
   async withTimeout(timeout) {
-    if (typeof timeout !== 'number') throw new Error(`WaitForInteraction withTimeout argument must be a number, got ${typeof timeout}`);
-    if (timeout < 0) throw new Error('timeout must be larger than 0');
+    if (typeof timeout !== 'number') {
+      throw new Error(`WaitForInteraction withTimeout argument must be a number, got ${typeof timeout}`);
+    }
+    if (timeout < 0) {
+      throw new Error('timeout must be larger than 0');
+    }
     let _conditionCall = invoke.call(invoke.IOS.Class('GREYCondition'), 'detoxConditionForElementMatched:', this._element._call);
     if (this._notCondition) {
       _conditionCall = invoke.call(invoke.IOS.Class('GREYCondition'), 'detoxConditionForNotElementMatched:', this._element._call);
     }
-    this._call = invoke.call(_conditionCall, 'waitWithTimeout:', invoke.IOS.CGFloat(timeout/1000));
+    this._call = invoke.call(_conditionCall, 'waitWithTimeout:', invoke.IOS.CGFloat(timeout / 1000));
     await this.execute();
   }
   whileElement(searchMatcher) {
@@ -215,14 +217,21 @@ class WaitForActionInteraction extends Interaction {
     super();
     //if (!(element instanceof Element)) throw new Error(`WaitForActionInteraction ctor 1st argument must be a valid Element, got ${typeof element}`);
     //if (!(matcher instanceof Matcher)) throw new Error(`WaitForActionInteraction ctor 2nd argument must be a valid Matcher, got ${typeof matcher}`);
-    if (!(searchMatcher instanceof Matcher)) throw new Error(`WaitForActionInteraction ctor 3rd argument must be a valid Matcher, got ${typeof searchMatcher}`);
+    if (!(searchMatcher instanceof Matcher)) {
+      throw new Error(`WaitForActionInteraction ctor 3rd argument must be a valid Matcher, got ${typeof searchMatcher}`);
+    }
     this._element = element;
     this._originalMatcher = matcher;
     this._searchMatcher = searchMatcher;
   }
   async _execute(searchAction) {
     //if (!searchAction instanceof Action) throw new Error(`WaitForActionInteraction _execute argument must be a valid Action, got ${typeof searchAction}`);
-    const _interactionCall = invoke.call(this._element._call, 'usingSearchAction:onElementWithMatcher:', searchAction._call, this._searchMatcher._call);
+    const _interactionCall = invoke.call(
+      this._element._call,
+      'usingSearchAction:onElementWithMatcher:',
+      searchAction._call,
+      this._searchMatcher._call,
+    );
     this._call = invoke.call(_interactionCall, 'assertWithMatcher:', this._originalMatcher._call);
     await this.execute();
   }
@@ -239,11 +248,15 @@ class Element {
     this._selectElementWithMatcher(this._originalMatcher);
   }
   _selectElementWithMatcher(matcher) {
-    if (!(matcher instanceof Matcher)) throw new Error(`Element _selectElementWithMatcher argument must be a valid Matcher, got ${typeof matcher}`);
+    if (!(matcher instanceof Matcher)) {
+      throw new Error(`Element _selectElementWithMatcher argument must be a valid Matcher, got ${typeof matcher}`);
+    }
     this._call = invoke.call(invoke.EarlGrey.instance, 'detox_selectElementWithMatcher:', matcher._call);
   }
   atIndex(index) {
-    if (typeof index !== 'number') throw new Error(`Element atIndex argument must be a number, got ${typeof index}`);
+    if (typeof index !== 'number') {
+      throw new Error(`Element atIndex argument must be a number, got ${typeof index}`);
+    }
     const _originalCall = this._call;
     this._call = invoke.call(_originalCall, 'atIndex:', invoke.IOS.NSInteger(index));
     return this;
@@ -254,8 +267,8 @@ class Element {
   async tapAtPoint(value) {
     return await new ActionInteraction(this, new TapAtPointAction(value)).execute();
   }
-  async longPress() {
-    return await new ActionInteraction(this, new LongPressAction()).execute();
+  async longPress(duration) {
+    return await new ActionInteraction(this, new LongPressAction(duration)).execute();
   }
   async multiTap(value) {
     return await new ActionInteraction(this, new MultiTapAction(value)).execute();
@@ -351,12 +364,16 @@ class WaitForElement extends WaitFor {
 }
 
 function expect(element) {
-  if (element instanceof Element) return new ExpectElement(element);
+  if (element instanceof Element) {
+    return new ExpectElement(element);
+  }
   throw new Error(`expect() argument is invalid, got ${typeof element}`);
 }
 
 function waitFor(element) {
-  if (element instanceof Element) return new WaitForElement(element);
+  if (element instanceof Element) {
+    return new WaitForElement(element);
+  }
   throw new Error(`waitFor() argument is invalid, got ${typeof element}`);
 }
 
