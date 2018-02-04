@@ -53,6 +53,7 @@ module.exports = generator({
 	supportedTypes: [
 		"CGFloat",
 		"CGPoint",
+		"CFTimeInterval",
 		"GREYContentEdge",
 		"GREYDirection",
 		"NSInteger",
